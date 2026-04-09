@@ -4,6 +4,8 @@ title: Appendix
 ---
 
 # Appendix
+## Good Schools
+We validated the good school rankings from 2018 to 2026, and found that they remained static in terms of their admission rate, particularly for those below 95%.
 ## DID: Pooled Sample Construction (Good & Normal Schools)
 Observations are stacked across focal schools after applying the same pre/post window, distance-band restrictions, and composition filters used in the unpooled analysis.
 
