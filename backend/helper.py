@@ -123,12 +123,13 @@ async def get_chat_completion(payload: ChatCompletionRequest) -> Any:
             latest_user_message = content
             latest_user_payload = message.model_dump(exclude_none=True)
 
-    # TODO: Add retrieval or routing logic here based on latest_user_message.
     conversation_history = "\n".join(history_lines)
     effective_messages = [
         message.model_dump(exclude_none=True) for message in payload.messages
     ]
 
+    # For long conversations, condense earlier user turns and keep the latest
+    # user message as the explicit request sent upstream.
     if (
         len(conversation_history) > MAX_CONVERSATION_HISTORY_CHARS
         and latest_user_message
