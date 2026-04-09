@@ -55,7 +55,7 @@ We adopt an *operational definition* tied to the mechanism under study. We defin
 
 
 # Data
-## HDB Resale Transactions
+## HDB Resale Transactions (2015-2026)
 
 HDB resale flat transaction data are sourced from data.gov and recorded at the **month-year level**. Each observation represents an **individual resale transaction**. Exact unit identification is not possible as unit numbers are unavailable. Repetitive variables were dropped where appropriate.
 
@@ -470,8 +470,7 @@ For some good schools, nearby *HDB resale activity data* is too sparse to suppor
 
 ## **Methodologies**
 
-*RDD* premises on flats just inside and outside the *1 km cutoff* being highly comparable, which the ring boundary violates. *Quadrant splits* and *balance diagnostics* tighten comparison but not perfectly -- pushing the design further to absorb every local permutation would strengthen identification of the effect in theory, but requires much more data than current and has
-weaker general interpretability.
+*RDD* premises on flats just inside and outside the *1 km cutoff* being highly comparable, which the ring boundary violates. *Quadrant splits* and *balance diagnostics* tighten comparison but not perfectly -- pushing the design further to absorb every local permutation would strengthen identification of the effect in theory, but requires much more data than current and has weaker general interpretability.
 
 For *DID*, causal interpretation depends on credible *pre-trends*, with *synthetic-DID* used to craft a pre-trend. However, missing observations in parts of the pre-period for many schools (with several otherwise usable school samples) led to a relatively low number of estimated models.
 
