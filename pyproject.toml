@@ -1,0 +1,27 @@
+[project]
+name = "dsa4264-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13.7"
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "geopandas>=1.0.0",
+    "fastapi>=0.116.1",
+    "matplotlib>=3.9.0",
+    "ipykernel>=7.2.0",
+    "open-webui>=0.7.2",
+    "pandas>=2.3.3",
+    "requests>=2.32.0",
+    "scikit-learn>=1.8.0",
+    "statsmodels>=0.14.6",
+    "tqdm>=4.67.0",
+    "tdqm>=0.0.1",
+    "doubleml>=0.11.2",
+    "diff-diff>=2.7.5",
+    "syntheticcontrolmethods>=1.1.17",
+    "toolz>=1.1.0",
+    "bayesian-optimization>=3.2.1",
+    "openai>=2.16.0",
+    "uvicorn>=0.35.0",
+]
