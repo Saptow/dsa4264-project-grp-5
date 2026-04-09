@@ -129,6 +129,86 @@ def _resolve_school_name(candidate: str) -> tuple[str | None, str | None, float]
     return None, None, best_score
 
 
+GENERIC_SCHOOL_REFERENCE_BASES = {
+    "GOOD SCHOOL",
+    "GOOD PRIMARY SCHOOL",
+    "NORMAL SCHOOL",
+    "NORMAL PRIMARY SCHOOL",
+    "PRIMARY SCHOOL",
+}
+
+GENERIC_SCHOOL_CONTEXT_TOKENS = {
+    "A",
+    "AN",
+    "THE",
+    "ANY",
+    "SOME",
+    "ESTIMATE",
+    "ESTIMATING",
+    "EFFECT",
+    "EFFECTS",
+    "IMPACT",
+    "IMPACTS",
+    "OF",
+    "ON",
+    "IN",
+    "FOR",
+    "ABOUT",
+    "AROUND",
+    "NEAR",
+    "WHAT",
+    "HOW",
+    "DO",
+    "DOES",
+    "DID",
+    "IS",
+    "ARE",
+    "WOULD",
+    "COULD",
+    "CAN",
+    "PLEASE",
+    "TELL",
+    "ME",
+    "SHOW",
+    "EXPLAIN",
+    "HDB",
+    "RESALE",
+    "PRICE",
+    "PRICES",
+}
+
+
+def _strip_generic_leading_tokens(text: str) -> str:
+    tokens = text.split()
+    while tokens and tokens[0] in {"A", "AN", "THE", "ANY", "SOME"}:
+        tokens = tokens[1:]
+    return _normalize_whitespace(" ".join(tokens))
+
+
+def _is_generic_school_reference(candidate: str) -> bool:
+    normalized_candidate = _normalize_school_name(candidate)
+    generic_candidate = _strip_generic_leading_tokens(normalized_candidate)
+    if generic_candidate in GENERIC_SCHOOL_REFERENCE_BASES:
+        return True
+
+    candidate_tokens = normalized_candidate.split()
+    for base in sorted(
+        GENERIC_SCHOOL_REFERENCE_BASES,
+        key=lambda value: len(value.split()),
+        reverse=True,
+    ):
+        base_tokens = base.split()
+        if candidate_tokens[-len(base_tokens) :] != base_tokens:
+            continue
+        prefix_tokens = candidate_tokens[: -len(base_tokens)]
+        if prefix_tokens and all(
+            token in GENERIC_SCHOOL_CONTEXT_TOKENS for token in prefix_tokens
+        ):
+            return True
+
+    return False
+
+
 def _extract_school_like_candidates(prompt: str) -> list[str]:
     pattern = re.compile(
         r"([A-Z0-9&'().,/\\-]+(?:\s+[A-Z0-9&'().,/\\-]+){0,9}\s+"
@@ -181,6 +261,10 @@ def validate_school(prompt: str) -> dict[str, Any]:
             )
         ]
         candidates = list(dict.fromkeys(explicit_school_mentions + candidates))
+
+    candidates = [
+        candidate for candidate in candidates if not _is_generic_school_reference(candidate)
+    ]
 
     if not candidates:
         for school_name in sorted(VALID_PRIMARY_SCHOOLS, key=len, reverse=True):
