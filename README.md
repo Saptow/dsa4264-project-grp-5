@@ -24,6 +24,11 @@ DSA4264-Project/
 │   └── Dockerfile
 ├── data_processing/
 ├── docs/
+    ├── report.md
+    ├── report.html
+    ├── appendix/
+    ├─├──appendix.md (DO NOT INCLUDE IN WORD COUNT)
+    
 ├── models/
 │   ├── did/
 │   ├── rdd/
@@ -84,7 +89,11 @@ Chatbot service to query model results and run simple tool-assisted analyses.
 
 ### `docs/`
 
-Project write-up materials, including the report and appendix drafts.
+Project write-up materials.
+
+- `report.md`: main report (Note: This is the main report document, our Word Count is based on the word count of this file, excluding diagrams.)
+- `report.html`: rendered HTML version of the main report for easier reading
+- `appendix/`: additional tables and figures not included in the main report (DO NOT INCLUDE IN WORD COUNT)
 
 ## Setup
 
