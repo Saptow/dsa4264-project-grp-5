@@ -13,6 +13,47 @@ TEMPERATURE = 0.2
 TOP_P = 0.8
 DEFAULT_RETRIEVED_CONTEXT = "No additional context was retrieved."
 MAX_TOOL_ROUNDS = 5
+MAX_CONVERSATION_HISTORY_CHARS = 12_000
+MAX_SUMMARIZED_USER_MESSAGES = 8
+MAX_SUMMARIZED_MESSAGE_CHARS = 240
+MAX_SUMMARIZED_HISTORY_CHARS = 1_800
+
+
+def _stringify_message_content(content: Any) -> str:
+    if isinstance(content, str):
+        return content
+    return json.dumps(content, ensure_ascii=False)
+
+
+def _truncate_text(text: str, max_chars: int) -> str:
+    normalized = " ".join(text.split())
+    if len(normalized) <= max_chars:
+        return normalized
+    return normalized[: max_chars - 3].rstrip() + "..."
+
+
+def _summarize_prior_user_messages(prior_user_messages: list[str]) -> str:
+    if not prior_user_messages:
+        return "No earlier user messages."
+
+    selected_messages = prior_user_messages[-MAX_SUMMARIZED_USER_MESSAGES:]
+    omitted_count = len(prior_user_messages) - len(selected_messages)
+    start_index = len(prior_user_messages) - len(selected_messages) + 1
+
+    summary_lines = [
+        f"- User message {index}: "
+        f"{_truncate_text(message, MAX_SUMMARIZED_MESSAGE_CHARS)}"
+        for index, message in enumerate(selected_messages, start=start_index)
+    ]
+    summary = "\n".join(summary_lines)
+
+    if len(summary) > MAX_SUMMARIZED_HISTORY_CHARS:
+        summary = _truncate_text(summary, MAX_SUMMARIZED_HISTORY_CHARS)
+
+    if omitted_count > 0:
+        return f"{omitted_count} earlier user messages were omitted for brevity.\n{summary}"
+
+    return summary
 
 
 async def _resolve_tool_messages(
@@ -70,25 +111,46 @@ async def get_chat_completion(payload: ChatCompletionRequest) -> Any:
     )
 
     history_lines: list[str] = []
+    prior_user_messages: list[str] = []
     latest_user_message = ""
+    latest_user_payload: dict[str, Any] | None = None
     for message in payload.messages:
-        content = (
-            message.content
-            if isinstance(message.content, str)
-            else json.dumps(message.content, ensure_ascii=False)
-        )
+        content = _stringify_message_content(message.content)
         history_lines.append(f"{message.role}: {content}")
         if message.role == "user":
+            if latest_user_message:
+                prior_user_messages.append(latest_user_message)
             latest_user_message = content
+            latest_user_payload = message.model_dump(exclude_none=True)
 
     # TODO: Add retrieval or routing logic here based on latest_user_message.
+    conversation_history = "\n".join(history_lines)
+    effective_messages = [
+        message.model_dump(exclude_none=True) for message in payload.messages
+    ]
+
+    if (
+        len(conversation_history) > MAX_CONVERSATION_HISTORY_CHARS
+        and latest_user_message
+        and latest_user_payload is not None
+    ):
+        summarized_prior_user_messages = _summarize_prior_user_messages(
+            prior_user_messages
+        )
+        conversation_history = (
+            "Earlier user messages were condensed because the conversation "
+            "history exceeded the context budget.\n"
+            f"{summarized_prior_user_messages}\n\n"
+            f"Latest user message:\n{latest_user_message}"
+        )
+        effective_messages = [latest_user_payload]
 
     upstream_messages: list[dict[str, Any]] = [
         {
             "role": "system",
             "content": PROMPT_TEMPLATE.format(
                 retrieved_context=supporting_context or DEFAULT_RETRIEVED_CONTEXT,
-                conversation_history="\n".join(history_lines),
+                conversation_history=conversation_history,
                 rdd_pooled_context=(
                     rdd_pooled_context
                     if isinstance(rdd_pooled_context, str)
@@ -112,9 +174,7 @@ async def get_chat_completion(payload: ChatCompletionRequest) -> Any:
             ),
         }
     ]
-    upstream_messages.extend(
-        message.model_dump(exclude_none=True) for message in payload.messages
-    )
+    upstream_messages.extend(effective_messages)
 
     request_kwargs: dict[str, Any] = {
         "model": MODEL,

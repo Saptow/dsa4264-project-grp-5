@@ -1,7 +1,7 @@
 [project]
 name = "dsa4264-project"
 version = "0.1.0"
-description = "Add your description here"
+description = "Codebase for estimating the effect of good primary school access on HDB resale prices."
 readme = "README.md"
 requires-python = ">=3.13.7"
 dependencies = [
@@ -24,4 +24,5 @@ dependencies = [
     "bayesian-optimization>=3.2.1",
     "openai>=2.16.0",
     "uvicorn>=0.35.0",
+    "python-dotenv>=1.2.1",
 ]

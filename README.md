@@ -16,6 +16,12 @@ The repo combines three main pieces of work:
 ```text
 DSA4264-Project/
 ├── backend/
+│   ├── main.py
+│   ├── helper.py
+│   ├── tools.py
+│   ├── schemas.py
+│   ├── requirements.txt
+│   └── Dockerfile
 ├── data_processing/
 ├── docs/
 ├── models/
@@ -23,7 +29,6 @@ DSA4264-Project/
 │   ├── rdd/
 │   └── stat.ipynb
 ├── docker-compose.yaml
-├── main.py
 ├── pyproject.toml
 ├── uv.lock
 └── README.md
@@ -41,7 +46,6 @@ Notebook and script pipeline for preparing the project inputs.
 - `rail-data.ipynb`: builds the processed MRT/LRT reference table
 - `create_clusters.ipynb`: constructs school-level clustering variants
 - `mall_get_lat_lon.py`: geocodes malls with OneMap
-- `onemapapi_key_generator.py`: fetches a fresh OneMap API token
 
 Main data sources:
 
@@ -73,10 +77,10 @@ Regression discontinuity (RDD) code organized around good-school and normal-scho
 
 Chatbot service to query model results and run simple tool-assisted analyses.
 
-- `main.py`: API entrypoint
-- `helper.py`: request assembly, model config, and tool round-trips
-- `tools.py`: backend tools available to the assistant
-- `schemas.py`: request/response models
+- `backend/main.py`: FastAPI API entrypoint
+- `backend/helper.py`: request assembly, model config, and tool round-trips
+- `backend/tools.py`: backend tools available to the assistant
+- `backend/schemas.py`: request/response models
 
 ### `docs/`
 
@@ -86,11 +90,14 @@ Project write-up materials, including the report and appendix drafts.
 
 This project uses `uv` for Python environment management. See [uv documentation](https://docs.astral.sh/uv/) for installation instructions.
 
+The project `pyproject.toml` includes the main research and backend dependencies. The repo is pinned to Python `3.13.7` in `.python-version`, and the package metadata currently requires `>=3.13.7`.
+
+To create the environment and install dependencies:
+
 ```bash
+uv python install 3.13.7
 uv sync
 ```
-
-The project `pyproject.toml` includes the main research and backend dependencies. Python version set to >=3.11.7.
 
 ## Environment Variables
 
@@ -100,19 +107,16 @@ Common variables used in this repo:
 
 ```env
 OPENAI_API_KEY=your_openai_api_key
-EMAIL=your_onemap_email
-PASSWORD=your_onemap_password
 API_KEY=your_onemap_api_key
 ```
 
 Notes:
 
 - `OPENAI_API_KEY` is required for the chatbot backend
-- `EMAIL` and `PASSWORD` are used to refresh a OneMap token
 - `API_KEY` is used by notebooks or scripts that call OneMap directly
 
 
-## Running The Chatbot for queries
+## Running The Chatbot
 
 The repo includes a FastAPI backend and an Open WebUI frontend via Docker Compose. See Docker and Docker Compose documentation for installation instructions [here](https://docs.docker.com/get-docker/).
 
@@ -125,3 +129,9 @@ After startup:
 - Open WebUI is available at `http://localhost:3000`
 - The FastAPI backend is available at `http://localhost:8000`
 - Swagger docs are available at `http://localhost:8000/docs`
+
+The Dockerized backend runs the app from `backend/main.py` via:
+
+```bash
+uvicorn backend.main:app --host 0.0.0.0 --port 8000
+```
